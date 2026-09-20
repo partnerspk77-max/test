@@ -2,6 +2,9 @@ name: Transit ETL Pipeline Runner
 
 # Controls when the workflow will run
 on:
+  push:
+    branches: [ main ]
+
   # 1. Triggered externally by webhooks or external cron services via GitHub API:
   #    curl -X POST https://api.github.com/repos/OWNER/REPO/dispatches \
   #      -H "Accept: application/vnd.github.v3+json" \
@@ -36,5 +39,7 @@ jobs:
         env:
           INGEST_ENDPOINT: ${{ secrets.INGEST_ENDPOINT }}
           INGEST_API_KEY: ${{ secrets.INGEST_API_KEY }}
+          INPUT_LINE: ${{ github.event.inputs.line || inputs.line }}
         run: |
-          python runner.py --line "${{ github.event.inputs.line || 'all' }}"
+          LINE="${INPUT_LINE:-all}"
+          python runner.py --line "$LINE"
