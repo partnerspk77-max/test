@@ -1,0 +1,4 @@
+# Standalone GTFS ingest worker (GitHub Actions).
+# Keep this package stdlib-first; only protobuf bindings are required for RT decode.
+gtfs-realtime-bindings>=1.0.0
+protobuf>=4.25.0,<6
