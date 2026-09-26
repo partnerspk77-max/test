@@ -1,3 +1,0 @@
-# Standalone Transit ETL Worker
-# This pipeline relies strictly on the Python Standard Library (3.9+)
-# Zero third-party packages required!
