@@ -1,0 +1,54 @@
+name: GTFS Vehicles Ingest
+
+# Prefer external cron → workflow_dispatch every ~30–60s (GitHub schedule min is 5 minutes).
+on:
+  workflow_dispatch:
+    inputs:
+      city:
+        description: "City slug or 'all'"
+        required: true
+        default: "johor"
+      dry_run:
+        description: "Skip POST to Django"
+        type: boolean
+        default: false
+  # Fallback if external cron is offline (not true PT30S — Actions minimum cadence is 5m)
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  ingest-vehicles:
+    name: Ingest vehicle positions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/gtfs-ingest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: workers/gtfs-ingest/requirements.txt
+
+      - name: Install worker deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run vehicles ingest
+        env:
+          INGEST_API_KEY: ${{ secrets.INGEST_API_KEY }}
+          INGEST_BASE_URL: ${{ secrets.INGEST_BASE_URL }}
+        run: |
+          EXTRA=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            EXTRA="--dry-run"
+          fi
+          CITY="${{ inputs.city }}"
+          if [ -z "$CITY" ]; then CITY="johor"; fi
+          python run_vehicles.py --city "$CITY" $EXTRA
